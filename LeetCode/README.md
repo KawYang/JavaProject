@@ -2,7 +2,7 @@
 
 
 
-[76. 最小覆盖子串](leetcode_76/README.md)
+[76. 最小覆盖子串](./leetcode_76/README.md)
 
 [994. 腐烂的橘子](leetcode_994/README.md)
 
