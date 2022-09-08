@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
+
+    <context:component-scan base-package="com.yang" />
+    <aop:aspectj-autoproxy />
+
+    <aop:config>
+        <aop:pointcut id="point" expression="execution(* com.yang.test.Demo.*(..))"/>
+        <aop:pointcut id="point1" expression="execution(* com.yang.test.Demo.*(..))"/>
+        <aop:pointcut id="point2" expression="execution(* com.yang.test.Demo.*(..))"/>
+        <aop:aspect ref="myLogger">
+            <aop:before method="beforeMethod" pointcut-ref="point" />
+            <aop:after method="afterMethod" pointcut-ref="point" />
+            <aop:after-throwing method="afterThrowing" pointcut-ref="point" throwing="e"/>
+            <aop:after-returning method="afterReturning" pointcut-ref="point" returning="value_return" />
+
+            <aop:after method="afterMethod" pointcut-ref="point2" />
+        </aop:aspect>
+        <!--<aop:pointcut id="point1" expression="execution(* com.yang.test.*(..))"/>-->
+
+        <aop:aspect ref="myLogger">
+            <aop:before method="beforeMethod" pointcut-ref="point1" />
+            <aop:after method="afterMethod" pointcut-ref="point1" />
+            <aop:after-throwing method="afterThrowing" pointcut-ref="point1" throwing="e"/>
+            <aop:after-returning method="afterReturning" pointcut-ref="point1" returning="value_return" />
+        </aop:aspect>
+    </aop:config>
+
+    <!-- 配置环绕增强 -->
+    <aop:config>
+        <aop:pointcut id="point_around" expression="execution(* com.yang.test.Demo2.*(..))"/>
+        <aop:aspect ref="myLogger">
+            <aop:around method="aroundMethod" pointcut-ref="point_around" />
+        </aop:aspect>
+    </aop:config>
+</beans>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:component-scan base-package="com.yang" />
+    <context:property-placeholder location="classpath:dbconfig.properties" />
+    <context:annotation-config />
+    <aop:aspectj-autoproxy />
+
+    <!-- 配置数据源信息  -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.user}" />
+        <property name="password" value="${jdbc.password}" />
+        <property name="driverClass" value="${jdbc.driver}" />
+        <property name="maxPoolSize" value="10" />
+        <property name="minPoolSize" value="5" />
+        <property name="loginTimeout" value="1000" />
+    </bean>
+
+    <!-- 创建  SqlSessionFactory 工厂  -->
+    <!-- 工厂的配置 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" >
+
+        <!-- 加载配置文件   -->
+        <property name="configLocation" value="classpath:config.xml" />
+        <!-- 设置数据源信息 -->
+        <property name="dataSource" ref="dataSource" />
+        <!-- 配置Mapper位置 -->
+        <property name="mapperLocations" >
+            <list>
+                <value>classpath:com/yang/mapper/StudentMapper.xml</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 使用包扫描创建代理对象，包下面所有Mapper接口统一创建代理对象 使用桥梁包下面 ： org.mybatis.spring.mapper.MapperScannerConfigurer
+            可以包扫描创建所有映射接口的代理对象 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 配置SqlSessionFactoryBean的名称 -->
+        <property name="basePackage" value="com.yang.dao"/>
+        <!-- 可选，如果不写，Spring启动时候。容器中。自动会按照类型去把SqlSessionFactory对象注入进来 -->
+        <!-- <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/> -->
+    </bean>
+
+    <!--
+        通过创建事务管理，将某事务的 多条 SQL语句 集中运行，
+        只要一条SQL 语句不能完成，事务就不会完成，
+        已经运行的 SQL 会回滚到之前。
+        -->
+
+    <!--✅ 事务控制配置 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 控制数据源,数据源的开启和关闭 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="rollbackOnCommitFailure" value="false" />
+    </bean>
+
+    <!-- 如何切入 ，transaction-manager 进行关联-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="get*" read-only="true" />
+            <tx:method name="query*" read-only="true" />
+            <tx:method name="find*" read-only="true" />
+            <tx:method name="load*" read-only="true" />
+            <tx:method name="select*" read-only="true" />
+            <!--  全部错误回滚  -->
+            <tx:method name="*" rollback-for="Exception" />
+        </tx:attributes>
+    </tx:advice>
+
+    <!--  面向切面  -->
+    <aop:config>
+        <aop:pointcut id="txPoint" expression="execution( * com.yang.service..*(..))"/>
+        <aop:pointcut id="updatePoint" expression="execution(* com.yang.service.StudentService.update(..)) "/>
+        <!-- 配置事务增强 -->
+        <aop:advisor  advice-ref="txAdvice" pointcut-ref="txPoint"/>
+        <!--<aop:aspect ref="myLogger">-->
+        <!--    <aop:around method="aroundMethod" pointcut-ref="updatePoint" />-->
+        <!--</aop:aspect>-->
+
+
+    </aop:config>
+
+
+
+</beans>
